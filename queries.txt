@@ -1,0 +1,75 @@
+-- Query 1: Get all employees with their department numbers from the current_dept_emp table
+SELECT emp_no, dept_no FROM current_dept_emp;
+
+-- Query 2: Get all departments and their department numbers
+SELECT dept_no, dept_name FROM departments;
+
+-- Query 3: Get all employees and their employment dates from the dept_emp table
+SELECT emp_no, from_date, to_date FROM dept_emp;
+
+-- Query 4: Get the latest employment date for each employee from the dept_emp_latest_date table
+SELECT emp_no, MAX(to_date) FROM dept_emp_latest_date GROUP BY emp_no;
+
+-- Query 5: Get all department managers and their management periods from the dept_manager table
+SELECT emp_no, dept_no, from_date, to_date FROM dept_manager;
+
+-- Query 6: Get all employees, their birth dates, and hire dates from the employees table
+SELECT emp_no, birth_date, hire_date FROM employees;
+
+-- Query 7: Get all salaries, their effective dates, and the corresponding employee numbers from the salaries table
+SELECT emp_no, salary, from_date, to_date FROM salaries;
+
+-- Query 8: Get all titles, their effective dates, and the corresponding employee numbers from the titles table
+SELECT emp_no, title, from_date, to_date FROM titles;
+
+-- Get employees that have more than 100 effective days
+SELECT emp_no, DATEDIFF(to_date, from_date) AS effective_days
+FROM dept_emp
+WHERE DATEDIFF(to_date, from_date) > 100
+LIMIT 1000;
+
+-- Get employees that have more than 10 effective days per month
+SELECT emp_no, (DATEDIFF(to_date, from_date) / TIMESTAMPDIFF(MONTH, from_date, to_date)) AS effective_days_per_month
+FROM dept_emp
+WHERE (DATEDIFF(to_date, from_date) / TIMESTAMPDIFF(MONTH, from_date, to_date)) > 10
+LIMIT 1000;
+
+-- Get 100 employees that have the most amount of time worked for the company
+SELECT emp_no, SUM(DATEDIFF(to_date, from_date)) AS total_days_worked
+FROM dept_emp
+GROUP BY emp_no
+ORDER BY total_days_worked DESC
+LIMIT 100;
+
+-- Get the 100 employees that have been paid the most by the company
+SELECT emp_no, SUM(salary * DATEDIFF(to_date, from_date)) AS total_paid
+FROM salaries
+GROUP BY emp_no
+ORDER BY total_paid DESC
+LIMIT 100;
+
+-- Get 100 employees that have the highest salary per month
+SELECT emp_no, (salary / TIMESTAMPDIFF(MONTH, from_date, to_date)) AS monthly_salary
+FROM salaries
+WHERE TIMESTAMPDIFF(MONTH, from_date, to_date) > 0
+ORDER BY monthly_salary DESC
+LIMIT 100;
+
+-- Get 100 employees that stopped their work earliest
+SELECT emp_no, MIN(to_date) AS end_date
+FROM dept_emp
+GROUP BY emp_no
+ORDER BY end_date
+LIMIT 100;
+
+-- Get salaries of employees that have the same birthday with each other
+SELECT e.emp_no, e.birth_date, s.salary
+FROM employees e
+JOIN salaries s ON e.emp_no = s.emp_no
+WHERE EXISTS (
+    SELECT 1
+    FROM employees e2
+    WHERE e2.birth_date = e.birth_date AND e2.emp_no != e.emp_no
+)
+ORDER BY e.birth_date
+LIMIT 1000;
